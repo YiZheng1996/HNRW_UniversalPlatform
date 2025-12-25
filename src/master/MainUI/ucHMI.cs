@@ -1,10 +1,8 @@
 ﻿using AntdUI;
-using MainUI.LogicalConfiguration;
 using MainUI.Procedure.Controls;
 using MainUI.Service;
+using MainUI.UniversalPlatform.Core.Domain.Workflows;
 using Microsoft.Extensions.Logging;
-using MySqlX.XDevAPI.Relational;
-using System.Threading.Tasks;
 using Label = System.Windows.Forms.Label;
 
 namespace MainUI
@@ -170,11 +168,11 @@ namespace MainUI
         /// <summary>
         /// 步骤状态变化事件
         /// </summary>
-        private void OnWorkflowStepStatusChanged(ChildModel step, int stepIndex)
+        private void OnWorkflowStepStatusChanged(WorkflowStep step, int stepIndex)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action<ChildModel, int>(OnWorkflowStepStatusChanged), step, stepIndex);
+                Invoke(new Action<WorkflowStep, int>(OnWorkflowStepStatusChanged), step, stepIndex);
                 return;
             }
 

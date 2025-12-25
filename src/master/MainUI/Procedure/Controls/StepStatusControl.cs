@@ -1,6 +1,6 @@
-﻿using MainUI.LogicalConfiguration;
-using MainUI.LogicalConfiguration.Infrastructure;
-using MainUI.LogicalConfiguration.Parameter;
+﻿using MainUI.UniversalPlatform.Core.Domain.Parameters;
+using MainUI.UniversalPlatform.Core.Domain.Workflows;
+using MainUI.UniversalPlatform.Infrastructure.Execution.Executors;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Label = AntdUI.Label;
@@ -28,7 +28,7 @@ namespace MainUI.Procedure.Controls
 
         private int stepNumber;
         private string currentStatus = "waiting";
-        private ChildModel currentStepData;            // 当前步骤数据
+        private WorkflowStep currentStepData;            // 当前步骤数据
 
         #endregion
 
@@ -177,11 +177,11 @@ namespace MainUI.Procedure.Controls
         /// <summary>
         /// 更新步骤状态
         /// </summary>
-        public void UpdateStatus(string status, ChildModel stepData = null, string message = "")
+        public void UpdateStatus(string status, WorkflowStep stepData = null, string message = "")
         {
             if (InvokeRequired)
             {
-                Invoke(new Action<string, ChildModel, string>(UpdateStatus), status, stepData, message);
+                Invoke(new Action<string, WorkflowStep, string>(UpdateStatus), status, stepData, message);
                 return;
             }
 
@@ -324,7 +324,7 @@ namespace MainUI.Procedure.Controls
         /// <summary>
         /// 显示详情信息
         /// </summary>
-        private void ShowDetails(ChildModel stepData)
+        private void ShowDetails(WorkflowStep stepData)
         {
             detailsPanel.Controls.Clear();
 
@@ -372,11 +372,11 @@ namespace MainUI.Procedure.Controls
 
         #region 配置参数
 
-        private int ShowConfigurationParameters(ChildModel stepData, int yPosition)
+        private int ShowConfigurationParameters(WorkflowStep stepData, int yPosition)
         {
             yPosition = AddSectionTitle("配置参数", yPosition, 0);
 
-            if (stepData?.StepParameter == null)
+            if (stepData?.Parameter == null)
             {
                 yPosition = AddDetailLine("参数状态", "未配置参数", yPosition, 0,
                     detailsPanel.Width, Color.FromArgb(150, 150, 150));
@@ -387,7 +387,7 @@ namespace MainUI.Procedure.Controls
             {
                 //string stepType = stepData.StepType ?? stepData.StepName ?? "Unknown";
                 string stepType = stepData.StepName ?? stepData.StepName ?? "Unknown";
-                yPosition = ParseAndDisplayParameters(stepType, stepData.StepParameter, yPosition);
+                yPosition = ParseAndDisplayParameters(stepType, stepData.Parameter, yPosition);
             }
             catch (Exception ex)
             {
@@ -494,7 +494,7 @@ namespace MainUI.Procedure.Controls
         {
             try
             {
-                var param = ConvertToParameter<Parameter_VariableAssignment>(stepParameter);
+                var param = ConvertToParameter<VariableAssignParameter>(stepParameter);
                 if (param == null) return DisplayGenericParameters(stepParameter, yPosition);
 
                 yPosition = AddSubSectionTitle("赋值配置", yPosition);
@@ -699,7 +699,7 @@ namespace MainUI.Procedure.Controls
                         Color.FromArgb(40, 167, 69));
                     yPosition += 22;
                 }
-          
+
                 // 超时和重试
                 yPosition = AddSubSectionTitle("超时和重试", yPosition);
 
@@ -1643,7 +1643,7 @@ namespace MainUI.Procedure.Controls
 
         #region 第三层: 运行时信息
 
-        private int ShowRuntimeInfo(ChildModel stepData, int yPosition)
+        private int ShowRuntimeInfo(WorkflowStep stepData, int yPosition)
         {
             yPosition = AddSectionTitle("运行时信息", yPosition, 0);
 

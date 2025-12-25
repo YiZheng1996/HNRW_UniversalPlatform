@@ -1,4 +1,4 @@
-﻿using MainUI.LogicalConfiguration;
+﻿using MainUI.UniversalPlatform.Core.Domain.Workflows;
 using Newtonsoft.Json.Linq;
 
 namespace MainUI.Procedure.Controls
@@ -22,7 +22,7 @@ namespace MainUI.Procedure.Controls
         private Dictionary<int, DateTime> _stepStartTimes = [];
 
         // 步骤数据字典（保存完整的步骤信息）
-        private Dictionary<int, ChildModel> _stepDataDict = [];
+        private Dictionary<int, WorkflowStep> _stepDataDict = [];
 
         #endregion
 
@@ -41,11 +41,11 @@ namespace MainUI.Procedure.Controls
         /// </summary>
         /// <param name="testName">测试名称</param>
         /// <param name="steps">步骤列表</param>
-        public void StartTest(string testName, List<ChildModel> steps)
+        public void StartTest(string testName, List<WorkflowStep> steps)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action<string, List<ChildModel>>(StartTest), testName, steps);
+                Invoke(new Action<string, List<WorkflowStep>>(StartTest), testName, steps);
                 return;
             }
 
@@ -123,7 +123,7 @@ namespace MainUI.Procedure.Controls
                     int stepIndex = kvp.Key;
 
                     // 检查步骤是否仍在执行中
-                    if (_stepDataDict.TryGetValue(stepIndex, out var stepData) && stepData.Status == 1)
+                    if (_stepDataDict.TryGetValue(stepIndex, out var stepData) && stepData.Status == StepStatus.Running)
                     {
                         if (_stepControls.TryGetValue(stepIndex, out var stepControl))
                         {
@@ -150,11 +150,11 @@ namespace MainUI.Procedure.Controls
         /// </summary>
         /// <param name="stepIndex">步骤索引</param>
         /// <param name="step">步骤信息</param>
-        public void UpdateStepStatus(int stepIndex, ChildModel step)
+        public void UpdateStepStatus(int stepIndex, WorkflowStep step)
         {
             if (InvokeRequired)
             {
-                BeginInvoke(new Action<int, ChildModel>(UpdateStepStatus), stepIndex, step);
+                BeginInvoke(new Action<int, WorkflowStep>(UpdateStepStatus), stepIndex, step);
                 return;
             }
 
@@ -186,7 +186,7 @@ namespace MainUI.Procedure.Controls
                             Debug.WriteLine($"步骤 {stepIndex} → 等待中");
                             break;
 
-                        case 1:
+                        case StepStatus.Running:
                             statusText = "running";
                             message = GetStepRunningMessage(step);
 
@@ -206,7 +206,7 @@ namespace MainUI.Procedure.Controls
 
                             break;
 
-                        case 2:
+                        case StepStatus.Succeeded:
                             statusText = "success";
                             // 步骤完成时移除开始时间
                             if (_stepStartTimes.TryGetValue(stepIndex, out DateTime value))
@@ -218,7 +218,7 @@ namespace MainUI.Procedure.Controls
                             }
                             break;
 
-                        case 3:
+                        case StepStatus.Failed:
                             statusText = "failed";
                             message = GetStepErrorMessage(step);
                             // 步骤失败时移除开始时间
@@ -239,7 +239,7 @@ namespace MainUI.Procedure.Controls
                     stepControl.UpdateStatus(statusText, step, message);
 
                     // 更新当前步骤显示
-                    if (step.Status == 1) // 执行中
+                    if (step.Status == StepStatus.Running) // 执行中
                     {
                         lblCurrentStep.Text = $"  当前步骤: [{stepIndex + 1}/{_stepControls.Count}] {step.StepName}";
                     }
@@ -333,7 +333,7 @@ namespace MainUI.Procedure.Controls
                 {
                     var stepData = kvp.Value;
                     // 状态为2(成功)或3(失败)都算完成
-                    if (stepData.Status == 2 || stepData.Status == 3)
+                    if (stepData.Status == StepStatus.Succeeded || stepData.Status == StepStatus.Failed)
                     {
                         completedSteps++;
                     }
@@ -360,7 +360,7 @@ namespace MainUI.Procedure.Controls
         /// <summary>
         /// 获取步骤执行中的消息
         /// </summary>
-        private string GetStepRunningMessage(ChildModel step)
+        private string GetStepRunningMessage(WorkflowStep step)
         {
             try
             {
@@ -386,7 +386,7 @@ namespace MainUI.Procedure.Controls
         /// <summary>
         /// 获取步骤错误消息
         /// </summary>
-        private string GetStepErrorMessage(ChildModel step)
+        private string GetStepErrorMessage(WorkflowStep step)
         {
             try
             {
@@ -400,15 +400,15 @@ namespace MainUI.Procedure.Controls
             }
         }
 
-        private void UpdateDelayProgress(StepStatusControl stepControl, ChildModel stepData, TimeSpan elapsed)
+        private void UpdateDelayProgress(StepStatusControl stepControl, WorkflowStep stepData, TimeSpan elapsed)
         {
             try
             {
                 int totalSeconds = 30; // 默认30秒
 
-                if (stepData?.StepParameter != null)
+                if (stepData?.Parameter != null)
                 {
-                    string paramStr = stepData.StepParameter.ToString();
+                    string paramStr = stepData.Parameter.ToString();
 
                     // 尝试解析 JSON 格式
                     if (paramStr.StartsWith('{'))

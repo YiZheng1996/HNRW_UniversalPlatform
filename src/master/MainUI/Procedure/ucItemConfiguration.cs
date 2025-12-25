@@ -1,5 +1,4 @@
-﻿using MainUI.LogicalConfiguration.Services;
-using MainUI.Service;
+﻿using MainUI.Service;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MainUI.Procedure
@@ -175,9 +174,9 @@ namespace MainUI.Procedure
                     string TestPath = $"{Application.StartupPath}Procedure\\{ModelType}\\{ModelName}\\{LstName}.json";
                     Debug.WriteLine($"选择型号：{ModelName},选择下标：{LstIndex},选择项点：{LstName}，路径：{TestPath}");
 
-                    var formFactory = Program.ServiceProvider.GetRequiredService<IFormService>();
-                    var form = formFactory.CreateLogicalConfigurationForm(TestPath, ModelType, ModelName, LstName);
-                    form.ShowDialog();
+                    //var formFactory = Program.ServiceProvider.GetRequiredService<IFormService>();
+                    //var form = formFactory.CreateLogicalConfigurationForm(TestPath, ModelType, ModelName, LstName);
+                    //form.ShowDialog();
                 }
             }
             catch (Exception ex)
