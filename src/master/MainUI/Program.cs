@@ -4,10 +4,12 @@ using MainUI.LogicalConfiguration.LogicalManager;
 using MainUI.LogicalConfiguration.Methods;
 using MainUI.LogicalConfiguration.Services;
 using MainUI.Service;
+using MainUI.UniversalPlatform.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
 using System.Configuration;
+using FormService = MainUI.UniversalPlatform.Infrastructure.DependencyInjection.FormService;
 
 namespace MainUI
 {
@@ -236,6 +238,14 @@ namespace MainUI
         /// </summary>
         private static void ConfigureServices(IServiceCollection services)
         {
+            // 新的统一注册方式
+            services.AddWorkflowCore();      // 核心服务（仓储、执行器、应用服务）
+            services.AddUIServices();         // UI服务（消息、窗体）
+            services.AddWorkflowLogging();   // 日志服务
+
+            // 保留旧服务（兼容期）
+            services.AddLegacyServices();    // 旧服务的兼容注册
+
             // 工作流服务
             services.AddWorkflowServices(
              configureOptions: options =>
@@ -271,7 +281,7 @@ namespace MainUI
             services.AddSingleton<VariableAssignmentEngine>();
 
             services.AddTransient<frmMainMenu>();// 主窗体
-            services.AddSingleton<IFormService, FormService>();// 窗体集合管理类
+            services.AddSingleton<UniversalPlatform.Infrastructure.DependencyInjection.IFormService, FormService>();// 窗体集合管理类
             services.AddTransient<DataGridViewManager>(); // UI管理器
             services.AddSingleton<WorkflowExecutionService>(); // 工作流执行服务
 
