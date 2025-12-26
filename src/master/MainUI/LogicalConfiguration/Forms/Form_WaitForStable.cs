@@ -201,7 +201,7 @@ namespace MainUI.LogicalConfiguration.Forms
         {
             try
             {
-                var variableManager = _globalVariable ?? Program.ServiceProvider?.GetService<GlobalVariableManager>();
+                var variableManager = GlobalVariable ?? Program.ServiceProvider?.GetService<GlobalVariableManager>();
                 if (variableManager == null)
                 {
                     Logger?.LogWarning("无法获取 GlobalVariableManager 实例");
@@ -674,7 +674,7 @@ namespace MainUI.LogicalConfiguration.Forms
                 SaveFormToParameter();
 
                 // 通知基类保存成功
-                SaveParameterFromForm();
+                SaveParameters();
 
                 DialogResult = DialogResult.OK;
                 Close();
@@ -728,7 +728,7 @@ namespace MainUI.LogicalConfiguration.Forms
                 if (selectedSourceType?.Value?.ToString() == "Variable")
                 {
                     // 从变量获取值
-                    var variableManager = _globalVariable ?? Program.ServiceProvider?.GetService<GlobalVariableManager>();
+                    var variableManager = GlobalVariable ?? Program.ServiceProvider?.GetService<GlobalVariableManager>();
                     var variable = variableManager?.FindVariableByName(Parameter.MonitorVariable);
                     if (variable != null)
                     {

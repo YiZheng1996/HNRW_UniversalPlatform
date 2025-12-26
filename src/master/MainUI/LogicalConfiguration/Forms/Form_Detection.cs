@@ -138,9 +138,9 @@ namespace MainUI.LogicalConfiguration.Forms
         /// </summary>
         private void LoadVariables()
         {
-            if (_globalVariable == null) return;
+            if (GlobalVariable == null) return;
 
-            var variables = _globalVariable.GetAllUserVariables()
+            var variables = GlobalVariable.GetAllUserVariables()
                 .Select(v => v.VarName)
                 .OrderBy(n => n)
                 .ToList();
@@ -410,7 +410,7 @@ namespace MainUI.LogicalConfiguration.Forms
 
                 SaveFormToParameter();
 
-                SaveParameterFromForm();
+                SaveParameters();
                 _hasUnsavedChanges = false;
                 DialogResult = DialogResult.OK;
                 Close();
@@ -619,7 +619,7 @@ namespace MainUI.LogicalConfiguration.Forms
         {
             Parameter = new Parameter_Detection
             {
-                DetectionName = $"条件判断步骤 {_workflowState?.StepNum + 1}"
+                DetectionName = $"条件判断步骤 {WorkflowState?.StepNum + 1}"
             };
 
             Logger?.LogDebug("设置条件判断参数默认值");

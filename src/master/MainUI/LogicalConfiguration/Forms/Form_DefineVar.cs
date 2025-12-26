@@ -95,8 +95,6 @@ namespace MainUI.LogicalConfiguration.Forms
 
                     // 使用新的变量管理器方法
                     bool removed = _variableManager.RemoveVariable(varName);
-                    bool removed = _variableManager.remo(varName);
-
                     if (removed)
                     {
                         LoadVariables(); // 重新加载列表
@@ -127,7 +125,7 @@ namespace MainUI.LogicalConfiguration.Forms
                 Logger.LogInformation("开始保存变量定义");
 
                 // 先清空所有变量
-                _workflowState.ClearUserVariables();
+                WorkflowState.ClearUserVariables();
 
                 var addedVariables = new List<string>();
                 var errorMessages = new List<string>();
@@ -168,7 +166,7 @@ namespace MainUI.LogicalConfiguration.Forms
                         };
 
                         // 使用新的线程安全方法添加变量
-                        _workflowState.AddVariable(newVariable);
+                        WorkflowState.AddVariable(newVariable);
                         addedVariables.Add(varName);
 
                         Logger.LogDebug("添加变量: {VarName}, 类型: {VarType}", varName, varType);
@@ -300,7 +298,7 @@ namespace MainUI.LogicalConfiguration.Forms
             throw new NotImplementedException();
         }
 
-        protected override void SaveParameterFromForm()
+        protected override void SaveParameters()
         {
             throw new NotImplementedException();
         }

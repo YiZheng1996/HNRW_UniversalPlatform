@@ -58,7 +58,7 @@ namespace MainUI.LogicalConfiguration.Forms
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, "Form_WriteCells 初始化失败");
+                    Logger?.LogError(ex, "Form_WriteCells 初始化失败");
                     MessageHelper.MessageOK($"初始化失败:{ex.Message}", TType.Error);
                 }
                 finally
@@ -77,7 +77,7 @@ namespace MainUI.LogicalConfiguration.Forms
             InitializeDataGridView();
             InitializeTempTextBox();
             BindEvents();
-            _logger?.LogInformation("Form_WriteCells 初始化完成");
+            Logger?.LogInformation("Form_WriteCells 初始化完成");
         }
 
         private void InitializeDataGridView()
@@ -90,11 +90,11 @@ namespace MainUI.LogicalConfiguration.Forms
                 DataGridViewDefineVar.MultiSelect = false;
                 DataGridViewDefineVar.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
                 DataGridViewDefineVar.EditMode = DataGridViewEditMode.EditOnEnter;
-                _logger?.LogDebug("DataGridView 初始化完成");
+                Logger?.LogDebug("DataGridView 初始化完成");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "初始化 DataGridView 失败");
+                Logger?.LogError(ex, "初始化 DataGridView 失败");
             }
         }
 
@@ -132,16 +132,16 @@ namespace MainUI.LogicalConfiguration.Forms
                         DataGridViewDefineVar.CurrentCell = DataGridViewDefineVar.Rows[_editingRowIndex].Cells["ColCellAddress"];
                         DataGridViewDefineVar.Refresh();
 
-                        _logger?.LogDebug("单元格内容已更新：行{Row}, 值={Value}", _editingRowIndex, _tempValueTextBox.Text);
+                        Logger?.LogDebug("单元格内容已更新：行{Row}, 值={Value}", _editingRowIndex, _tempValueTextBox.Text);
                     }
                 };
 
                 this.Controls.Add(_tempValueTextBox);
-                _logger?.LogDebug("临时文本框初始化完成");
+                Logger?.LogDebug("临时文本框初始化完成");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "初始化临时文本框失败");
+                Logger?.LogError(ex, "初始化临时文本框失败");
             }
         }
 
@@ -309,11 +309,11 @@ namespace MainUI.LogicalConfiguration.Forms
                 row.Cells["ColVarText"].Value = "";
                 DataGridViewDefineVar.CurrentCell = row.Cells["ColCellAddress"];
                 DataGridViewDefineVar.BeginEdit(true);
-                _logger?.LogDebug("添加新的写入配置行");
+                Logger?.LogDebug("添加新的写入配置行");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "添加新行时发生错误");
+                Logger?.LogError(ex, "添加新行时发生错误");
                 MessageHelper.MessageOK($"添加失败:{ex.Message}", TType.Error);
             }
         }
@@ -339,19 +339,19 @@ namespace MainUI.LogicalConfiguration.Forms
                         }
                     }
                     UpdateRowIndices();
-                    _logger?.LogDebug("删除选中的写入配置行");
+                    Logger?.LogDebug("删除选中的写入配置行");
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "删除行时发生错误");
+                Logger?.LogError(ex, "删除行时发生错误");
                 MessageHelper.MessageOK($"删除失败:{ex.Message}", TType.Error);
             }
         }
 
         private void BtnSave_Click(object sender, EventArgs e)
         {
-            SaveParameterFromForm();
+            SaveParameters();
         }
 
         private void BtnCancel_Click(object sender, EventArgs e)
@@ -413,12 +413,12 @@ namespace MainUI.LogicalConfiguration.Forms
                     param.Items.Add(item);
                 }
 
-                _logger?.LogDebug($"从界面获取参数,共 {param.Items.Count} 项");
+                Logger?.LogDebug($"从界面获取参数,共 {param.Items.Count} 项");
                 return param;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "获取当前参数时发生错误");
+                Logger?.LogError(ex, "获取当前参数时发生错误");
                 return new Parameter_WriteCells();
             }
         }
@@ -461,11 +461,11 @@ namespace MainUI.LogicalConfiguration.Forms
                 // 加载完成后更新所有序号
                 UpdateRowIndices();
 
-                _logger?.LogInformation($"成功加载参数,包含 {_currentParameter.Items?.Count ?? 0} 项");
+                Logger?.LogInformation($"成功加载参数,包含 {_currentParameter.Items?.Count ?? 0} 项");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "加载参数到界面时发生错误");
+                Logger?.LogError(ex, "加载参数到界面时发生错误");
                 MessageHelper.MessageOK($"加载参数失败:{ex.Message}", TType.Error);
             }
             finally
@@ -515,7 +515,7 @@ namespace MainUI.LogicalConfiguration.Forms
             if (Regex.IsMatch(content, @"^[\w\u4e00-\u9fa5]+$") &&
                 !Regex.IsMatch(content, @"^\d+(\.\d+)?$"))
             {
-                if (_globalVariable?.FindVariableByName(content) != null)
+                if (GlobalVariable?.FindVariableByName(content) != null)
                 {
                     return CellsDataSourceType.Variable;
                 }
@@ -534,11 +534,11 @@ namespace MainUI.LogicalConfiguration.Forms
             try
             {
                 ExpressionInputPanel.CloseActivePanel();
-                _logger?.LogDebug("写入单元格配置窗体正在关闭");
+                Logger?.LogDebug("写入单元格配置窗体正在关闭");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "窗体关闭事件处理失败");
+                Logger?.LogError(ex, "窗体关闭事件处理失败");
             }
         }
 

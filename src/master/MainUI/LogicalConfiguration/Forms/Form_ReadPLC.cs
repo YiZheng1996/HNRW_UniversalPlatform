@@ -48,7 +48,7 @@ namespace MainUI.LogicalConfiguration.Forms
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, "Form_ReadPLC 初始化失败");
+                    Logger?.LogError(ex, "Form_ReadPLC 初始化失败");
                     MessageHelper.MessageOK($"初始化失败:{ex.Message}", TType.Error);
                 }
                 finally
@@ -75,7 +75,7 @@ namespace MainUI.LogicalConfiguration.Forms
 
             UpdatePreview();
 
-            _logger?.LogInformation("Form_ReadPLC 初始化完成");
+            Logger?.LogInformation("Form_ReadPLC 初始化完成");
         }
 
         private void InitializeDataGridView()
@@ -107,7 +107,7 @@ namespace MainUI.LogicalConfiguration.Forms
                     DataGridViewPLCList.CurrentCell = null;
                     DataGridViewPLCList.CurrentCell = DataGridViewPLCList.Rows[_editingRowIndex].Cells["ColPLCAddress"];
                     DataGridViewPLCList.Refresh();
-                    _logger?.LogDebug("单元格内容已更新：行{Row}, 值={Value}", _editingRowIndex, _tempVarTextBox.Text);
+                    Logger?.LogDebug("单元格内容已更新：行{Row}, 值={Value}", _editingRowIndex, _tempVarTextBox.Text);
                 }
             };
 
@@ -136,7 +136,7 @@ namespace MainUI.LogicalConfiguration.Forms
         {
             try
             {
-                var moduleTags = await _plcManager.GetModuleTagsAsync();
+                var moduleTags = await PLCManager.GetModuleTagsAsync();
 
                 // 填充模块下拉框
                 if (DataGridViewPLCList.Columns["ColPlcModule"] is DataGridViewComboBoxColumn moduleColumn)
@@ -147,11 +147,11 @@ namespace MainUI.LogicalConfiguration.Forms
                         moduleColumn.Items.Add(moduleName);
                     }
                 }
-                _logger?.LogDebug("已加载 {Count} 个PLC模块", moduleTags.Count);
+                Logger?.LogDebug("已加载 {Count} 个PLC模块", moduleTags.Count);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "加载PLC模块失败");
+                Logger?.LogError(ex, "加载PLC模块失败");
             }
         }
 
@@ -191,12 +191,12 @@ namespace MainUI.LogicalConfiguration.Forms
                     }
                 }
 
-                _logger?.LogDebug("从界面获取参数，共 {Count} 项", param.Items.Count);
+                Logger?.LogDebug("从界面获取参数，共 {Count} 项", param.Items.Count);
                 return param;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "获取当前参数时发生错误");
+                Logger?.LogError(ex, "获取当前参数时发生错误");
                 return new Parameter_ReadPLC();
             }
         }
@@ -234,11 +234,11 @@ namespace MainUI.LogicalConfiguration.Forms
                 }
 
                 UpdateRowIndices();
-                _logger?.LogInformation("成功加载参数，包含 {Count} 项", _currentParameter.Items?.Count ?? 0);
+                Logger?.LogInformation("成功加载参数，包含 {Count} 项", _currentParameter.Items?.Count ?? 0);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "加载参数时发生错误");
+                Logger?.LogError(ex, "加载参数时发生错误");
             }
             finally
             {
@@ -256,7 +256,7 @@ namespace MainUI.LogicalConfiguration.Forms
                 var currentStep = GetCurrentStepSafely();
                 if (currentStep?.StepParameter == null)
                 {
-                    _logger?.LogDebug("当前步骤无参数，使用默认值");
+                    Logger?.LogDebug("当前步骤无参数，使用默认值");
                     LoadParameters(new Parameter_ReadPLC());
                     return;
                 }
@@ -280,7 +280,7 @@ namespace MainUI.LogicalConfiguration.Forms
                     }
                     catch (JsonException ex)
                     {
-                        _logger?.LogWarning(ex, "JSON反序列化失败");
+                        Logger?.LogWarning(ex, "JSON反序列化失败");
                         loadedParameter = null;
                     }
                 }
@@ -292,13 +292,13 @@ namespace MainUI.LogicalConfiguration.Forms
                 }
                 else
                 {
-                    _logger?.LogWarning("参数加载失败，使用默认值");
+                    Logger?.LogWarning("参数加载失败，使用默认值");
                     LoadParameters(new Parameter_ReadPLC());
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "加载步骤参数失败");
+                Logger?.LogError(ex, "加载步骤参数失败");
                 LoadParameters(new Parameter_ReadPLC());
             }
         }
@@ -309,7 +309,7 @@ namespace MainUI.LogicalConfiguration.Forms
             {
                 if (string.IsNullOrEmpty(moduleName)) return;
 
-                var addresses = await _plcManager.GetModuleTagsAsync(moduleName);
+                var addresses = await PLCManager.GetModuleTagsAsync(moduleName);
 
                 if (rowIndex >= 0 && rowIndex < DataGridViewPLCList.Rows.Count)
                 {
@@ -336,7 +336,7 @@ namespace MainUI.LogicalConfiguration.Forms
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "加载PLC地址失败");
+                Logger?.LogError(ex, "加载PLC地址失败");
             }
         }
 
@@ -365,11 +365,11 @@ namespace MainUI.LogicalConfiguration.Forms
                 // 2. 调用基类方法保存参数
                 SetParameterValue(_currentParameter);
 
-                _logger?.LogDebug("保存了 {Count} 个PLC读取项", _currentParameter.Items.Count);
+                Logger?.LogDebug("保存了 {Count} 个PLC读取项", _currentParameter.Items.Count);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "保存参数失败");
+                Logger?.LogError(ex, "保存参数失败");
                 throw;
             }
         }
@@ -477,7 +477,7 @@ namespace MainUI.LogicalConfiguration.Forms
         {
             try
             {
-                var addresses = await _plcManager.GetModuleTagsAsync();
+                var addresses = await PLCManager.GetModuleTagsAsync();
                 if (addresses == null || addresses.Count == 0)
                 {
                     Logger?.LogWarning("模块 {ModuleName} 没有可用地址", moduleName);
@@ -513,7 +513,7 @@ namespace MainUI.LogicalConfiguration.Forms
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "加载地址列表失败");
+                Logger?.LogError(ex, "加载地址列表失败");
             }
         }
 
@@ -521,7 +521,7 @@ namespace MainUI.LogicalConfiguration.Forms
         {
             int rowIndex = DataGridViewPLCList.Rows.Add();
             UpdateRowIndices();
-            _logger?.LogDebug("添加新的PLC读取项，行索引: {RowIndex}", rowIndex);
+            Logger?.LogDebug("添加新的PLC读取项，行索引: {RowIndex}", rowIndex);
         }
 
         private void BtnDelete_Click(object sender, EventArgs e)
@@ -540,7 +540,7 @@ namespace MainUI.LogicalConfiguration.Forms
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "删除行失败");
+                Logger?.LogError(ex, "删除行失败");
             }
         }
 
@@ -561,7 +561,7 @@ namespace MainUI.LogicalConfiguration.Forms
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "上移行失败");
+                Logger?.LogError(ex, "上移行失败");
             }
         }
 
@@ -582,7 +582,7 @@ namespace MainUI.LogicalConfiguration.Forms
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "下移行失败");
+                Logger?.LogError(ex, "下移行失败");
             }
         }
 
@@ -595,13 +595,13 @@ namespace MainUI.LogicalConfiguration.Forms
                     return;
                 }
 
-                SaveParameterFromForm();
+                SaveParameters();
                 DialogResult = DialogResult.OK;
                 Close();
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "保存失败");
+                Logger?.LogError(ex, "保存失败");
                 MessageHelper.MessageOK($"保存失败: {ex.Message}", TType.Error);
             }
         }
@@ -663,11 +663,11 @@ namespace MainUI.LogicalConfiguration.Forms
                     preview.AppendLine($"[{i + 1}] {moduleName}.{address} → {targetVar}");
                 }
 
-                _logger?.LogDebug("预览更新完成");
+                Logger?.LogDebug("预览更新完成");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "更新预览失败");
+                Logger?.LogError(ex, "更新预览失败");
             }
         }
 
