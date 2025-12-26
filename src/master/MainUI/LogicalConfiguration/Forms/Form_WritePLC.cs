@@ -792,7 +792,7 @@ namespace MainUI.LogicalConfiguration.Forms
         private void BtnSave_Click(object sender, EventArgs e)
         {
             // 基类统一处理
-            SaveParameters();
+            SaveParameterFromForm();
         }
 
         /// <summary>

@@ -674,7 +674,7 @@ namespace MainUI.LogicalConfiguration.Forms
                 SaveFormToParameter();
 
                 // 通知基类保存成功
-                SaveParameters();
+                SaveParameterFromForm();
 
                 DialogResult = DialogResult.OK;
                 Close();

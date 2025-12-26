@@ -4,7 +4,7 @@ using MainUI.LogicalConfiguration.Services;
 using MainUI.LogicalConfiguration.Services.ServicesPLC;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace MainUI.LogicalConfiguration.Forms
 {
@@ -18,7 +18,7 @@ namespace MainUI.LogicalConfiguration.Forms
     /// 
     /// 子类只需定义 Parameter 属性并重写虚方法即可
     /// </summary>
-    public class BaseParameterForm : UIForm
+    public abstract class BaseParameterForm : UIForm
     {
         #region 服务缓存字段
 
@@ -84,7 +84,7 @@ namespace MainUI.LogicalConfiguration.Forms
         private bool _isLoading = true;
 
         /// <summary>
-        /// 是否正在加载中
+        /// PLC 管理器
         /// </summary>
         protected bool IsLoading
         {
@@ -97,9 +97,17 @@ namespace MainUI.LogicalConfiguration.Forms
         /// </summary>
         protected bool HasUnsavedChanges { get; set; }
 
-        #endregion
+        /// <summary>
+        /// 工作流状态服务
+        /// </summary>
+        protected IWorkflowStateService WorkflowState =>
+            _workflowState ??= ResolveRequiredService<IWorkflowStateService>();
 
-        #region 构造函数
+        /// <summary>
+        /// 全局变量管理器（只读访问器）
+        /// </summary>
+        protected GlobalVariableManager GlobalVariable =>
+            _globalVariable ??= ResolveService<GlobalVariableManager>();
 
         /// <summary>
         /// 无参构造函数 - 供设计器使用
@@ -160,6 +168,98 @@ namespace MainUI.LogicalConfiguration.Forms
             }
         }
 
+        #endregion
+
+        #region 状态属性
+
+        private bool _isLoading = true;
+
+        /// <summary>
+        /// 按类型解析服务
+        /// </summary>
+        private object ResolveService(Type serviceType)
+        {
+            if (DesignMode) return null;
+
+            try
+            {
+                return Program.ServiceProvider?.GetService(serviceType);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"解析服务 {serviceType.Name} 失败: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 是否有未保存的更改
+        /// </summary>
+        protected bool HasUnsavedChanges { get; set; }
+
+        #endregion
+
+        #region 构造函数
+
+        /// <summary>
+        /// 无参构造函数 - 供设计器使用
+        /// 服务将在首次访问时延迟解析
+        /// </summary>
+        protected BaseParameterForm()
+        {
+            // 设计时不做任何操作
+        }
+
+        /// <summary>
+        /// 依赖注入构造函数 - 运行时使用
+        /// </summary>
+        protected BaseParameterForm(
+            IWorkflowStateService workflowState,
+            ILogger logger)
+        {
+            _workflowState = workflowState ?? throw new ArgumentNullException(nameof(workflowState));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        #endregion
+
+        #region 服务解析
+
+        /// <summary>
+        /// 解析必需服务（不存在则抛异常）
+        /// </summary>
+        private T ResolveRequiredService<T>() where T : class
+        {
+            if (DesignMode) return null;
+
+            var service = Program.ServiceProvider?.GetService<T>();
+            if (service == null)
+            {
+                var errorMessage = $"无法解析必需服务: {typeof(T).Name}。请确保已正确配置依赖注入。";
+                Logger?.LogError(message: errorMessage);
+                throw new InvalidOperationException(errorMessage);
+            }
+            return service;
+        }
+
+        /// <summary>
+        /// 解析可选服务（不存在则返回null）
+        /// </summary>
+        private T ResolveService<T>() where T : class
+        {
+            if (DesignMode) return null;
+
+            try
+            {
+                return Program.ServiceProvider?.GetService<T>();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"解析服务 {typeof(T).Name} 失败: {ex.Message}");
+                return null;
+            }
+        }
+
         /// <summary>
         /// 按类型解析服务
         /// </summary>
@@ -183,130 +283,13 @@ namespace MainUI.LogicalConfiguration.Forms
         #region 生命周期方法
 
         /// <summary>
-        /// 窗体加载事件 - 自动从工作流加载参数
+        /// 窗体加载事件
         /// </summary>
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
 
             if (DesignMode) return;
-
-            try
-            {
-                LoadParametersFromWorkflow();
-            }
-            finally
-            {
-                _isLoading = false;
-            }
-        }
-
-        #endregion
-
-        #region 参数管理核心方法
-
-        /// <summary>
-        /// 从工作流加载参数 - 统一逻辑
-        /// </summary>
-        protected virtual void LoadParametersFromWorkflow()
-        {
-            if (DesignMode || WorkflowState == null) return;
-
-            var currentStep = GetCurrentStepSafely();
-            if (currentStep?.StepParameter != null)
-            {
-                try
-                {
-                    // 调用子类的参数转换方法
-                    var convertedParameter = ConvertParameter(currentStep.StepParameter);
-
-                    // 设置参数（通过反射访问子类的 Parameter 属性）
-                    SetParameterValue(convertedParameter);
-
-                    Logger?.LogInformation("成功加载参数: {FormType}", GetType().Name);
-
-                    // 调用子类的加载方法
-                    LoadParameterToForm();
-                }
-                catch (Exception ex)
-                {
-                    Logger?.LogError(ex, "参数转换失败: {FormType}", GetType().Name);
-                    SetDefaultValues();
-                }
-            }
-            else
-            {
-                SetDefaultValues();
-            }
-        }
-
-        /// <summary>
-        /// 保存参数到工作流 - 统一的保存逻辑
-        /// </summary>
-        protected virtual void SaveParameters()
-        {
-            if (DesignMode || WorkflowState == null) return;
-
-            try
-            {
-                var currentStep = GetCurrentStepSafely();
-                if (currentStep == null)
-                {
-                    Logger?.LogWarning("步骤索引无效，无法保存参数: StepNum={StepNum}", WorkflowState.StepNum);
-                    MessageHelper.MessageOK("步骤索引无效，无法保存参数。", TType.Error);
-                    return;
-                }
-
-                if (!ValidateInput())
-                {
-                    Logger?.LogWarning("参数验证失败: {FormType}", GetType().Name);
-                    return;
-                }
-
-                // 调用子类方法将界面数据保存到参数对象
-                SaveFormToParameter();
-
-                // 获取参数对象（通过反射访问子类的 Parameter 属性）
-                var parameter = GetParameterValue();
-
-                // 清理花括号
-                CleanBracketsFromProperties(parameter);
-
-                // 更新到工作流
-                WorkflowState.UpdateStepParameter(WorkflowState.StepNum, parameter);
-
-                Logger?.LogInformation("参数保存成功: {FormType}, StepNum={StepNum}",
-                    GetType().Name, WorkflowState.StepNum);
-
-                MessageHelper.MessageOK("参数已暂存，主界面点击保存后才会写入文件。", TType.Info);
-                DialogResult = DialogResult.OK;
-                Close();
-            }
-            catch (Exception ex)
-            {
-                Logger?.LogError(ex, "保存参数失败: {FormType}", GetType().Name);
-                MessageHelper.MessageOK($"保存参数失败：{ex.Message}", TType.Error);
-            }
-        }
-
-        #endregion
-
-        #region 反射辅助方法
-
-        /// <summary>
-        /// 通过反射获取子类的 Parameter 属性值
-        /// </summary>
-        protected virtual object GetParameterValue()
-        {
-            var parameterProperty = GetType().GetProperty("Parameter");
-            if (parameterProperty != null && parameterProperty.CanRead)
-            {
-                return parameterProperty.GetValue(this);
-            }
-
-            Logger?.LogWarning("未找到 Parameter 属性: {FormType}", GetType().Name);
-            return null;
-        }
 
         /// <summary>
         /// 通过反射设置子类的 Parameter 属性值
@@ -372,116 +355,85 @@ namespace MainUI.LogicalConfiguration.Forms
                 }
             }
 
-            // 3. 尝试序列化再反序列化（处理匿名对象）
-            try
-            {
-                string jsonString = JsonConvert.SerializeObject(stepParameter);
-                return JsonConvert.DeserializeObject(jsonString, parameterType);
-            }
-            catch (JsonException ex)
-            {
-                Logger?.LogWarning(ex, "对象转换失败，使用默认参数");
-            }
-
-            // 4. 最终兜底 - 创建默认实例
-            Logger?.LogDebug("所有转换方法失败，返回默认参数实例");
-            try
-            {
-                return Activator.CreateInstance(parameterType);
-            }
-            catch (Exception ex)
-            {
-                Logger?.LogError(ex, "创建默认参数实例失败");
-                return null;
-            }
-        }
-
-        #endregion
-
-        #region 虚方法 - 子类按需重写
-
-        /// <summary>
-        /// 加载参数到界面控件
-        /// 子类必须重写此方法，将参数的值填充到界面控件
-        /// </summary>
-        protected virtual void LoadParameterToForm()
-        {
-            // 子类实现：从 Parameter 读取数据并填充到控件
-        }
-
-        /// <summary>
-        /// 从界面控件保存到参数
-        /// 子类必须重写此方法，将界面控件的值保存到 Parameter
-        /// </summary>
-        protected virtual void SaveFormToParameter()
-        {
-            // 子类实现：从控件读取数据并保存到 Parameter
-        }
-
-        /// <summary>
-        /// 设置默认值
-        /// 子类可以重写此方法，设置参数的默认值
-        /// </summary>
-        protected virtual void SetDefaultValues()
-        {
-            // 尝试创建默认的参数对象
-            var parameterType = GetParameterType();
-            if (parameterType != null)
-            {
-                try
-                {
-                    var defaultParameter = Activator.CreateInstance(parameterType);
-                    SetParameterValue(defaultParameter);
-                    Logger?.LogDebug("使用默认参数: {ParameterType}", parameterType.Name);
-                }
-                catch (Exception ex)
-                {
-                    Logger?.LogWarning(ex, "创建默认参数失败");
-                }
-            }
-
-            LoadParameterToForm();
-        }
-
-        /// <summary>
-        /// 验证输入
-        /// 子类可以重写此方法，实现自定义验证逻辑
-        /// </summary>
-        protected virtual bool ValidateInput()
-        {
-            return true;
-        }
-
-        #endregion
-
-        #region 按钮事件处理
-
-        /// <summary>
-        /// 确定按钮点击事件 - 保存参数并关闭窗体
-        /// 子类可以在按钮事件中调用 SaveParameters()
-        /// </summary>
-        protected virtual void OnOkButtonClick(object sender, EventArgs e)
-        {
-            SaveParameters();
-        }
-
-        /// <summary>
-        /// 取消按钮点击事件 - 直接关闭窗体不保存
-        /// </summary>
-        protected virtual void OnCancelButtonClick(object sender, EventArgs e)
-        {
-            DialogResult = DialogResult.Cancel;
-            Close();
-        }
-
-        #endregion
-
         #region 辅助方法
 
         /// <summary>
-        /// 安全获取当前步骤 - 防止索引越界异常
+        /// 安全执行操作（带异常处理）
         /// </summary>
-        protected ChildModel GetCurrentStepSafely()
+        protected void SafeExecute(Action action, string operationName = null)
+        {
+            try
+            {
+                action?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                Logger?.LogError(ex, "操作失败: {Operation}", operationName ?? "未知操作");
+                MessageHelper.MessageOK($"操作失败：{ex.Message}", TType.Error);
+            }
+        }
+
+        /// <summary>
+        /// 安全执行异步操作
+        /// </summary>
+        protected async Task SafeExecuteAsync(Func<Task> action, string operationName = null)
+        {
+            try
+            {
+                if (action != null)
+                {
+                    await action();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger?.LogError(ex, "异步操作失败: {Operation}", operationName ?? "未知操作");
+                MessageHelper.MessageOK($"操作失败：{ex.Message}", TType.Error);
+            }
+        }
+
+        /// <summary>
+        /// 获取所有变量名称列表（用于下拉框绑定）
+        /// </summary>
+        protected List<string> GetVariableNames(bool includeSystemVariables = false)
+        {
+            var variables = includeSystemVariables
+                ? GlobalVariable?.GetAllVariables()
+                : GlobalVariable?.GetAllUserVariables();
+
+            return variables?.Select(v => v.VarName).ToList() ?? [];
+        }
+
+        /// <summary>
+        /// 获取变量下拉数据源
+        /// </summary>
+        protected List<SelectItem> GetVariableSelectItems(bool includeSystemVariables = false)
+        {
+            var variables = includeSystemVariables
+                ? GlobalVariable?.GetAllVariables()
+                : GlobalVariable?.GetAllUserVariables();
+
+            return variables?.Select(v => new SelectItem(
+                $"{v.VarName} ({v.VarType})",
+                v.VarName
+            )).ToList() ?? [];
+        }
+
+        /// <summary>
+        /// 标记为已修改
+        /// </summary>
+        protected void MarkAsModified()
+        {
+            if (!_isLoading)
+            {
+                HasUnsavedChanges = true;
+            }
+        }
+
+        /// <summary>
+        /// 绑定文本框变更事件（自动标记修改）
+        /// </summary>
+        protected void BindTextChangedForModification(params Control[] controls)
         {
             if (WorkflowState == null) return null;
 
@@ -492,7 +444,19 @@ namespace MainUI.LogicalConfiguration.Forms
 
                 if (steps != null && idx >= 0 && idx < steps.Count)
                 {
-                    return steps[idx];
+                    textBox.TextChanged += (s, e) => MarkAsModified();
+                }
+                else if (control is ComboBox comboBox)
+                {
+                    comboBox.SelectedIndexChanged += (s, e) => MarkAsModified();
+                }
+                else if (control is CheckBox checkBox)
+                {
+                    checkBox.CheckedChanged += (s, e) => MarkAsModified();
+                }
+                else if (control is NumericUpDown numericUpDown)
+                {
+                    numericUpDown.ValueChanged += (s, e) => MarkAsModified();
                 }
 
                 Logger?.LogWarning("步骤索引超出范围: Index={Index}, Count={Count}", idx, steps?.Count ?? 0);

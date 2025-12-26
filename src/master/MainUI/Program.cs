@@ -1,12 +1,7 @@
-﻿using MainUI.LogicalConfiguration;
-using MainUI.LogicalConfiguration.Engine;
-using MainUI.LogicalConfiguration.LogicalManager;
-using MainUI.LogicalConfiguration.Methods;
-using MainUI.LogicalConfiguration.Services;
-using MainUI.Service;
+﻿using MainUI.Service;
+using MainUI.UniversalPlatform.Infrastructure.DependencyInjection;
+using MainUI.UniversalPlatform.UI.WorkflowDesigner.Views;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using NLog.Extensions.Logging;
 using System.Configuration;
 
 namespace MainUI
@@ -89,7 +84,7 @@ namespace MainUI
         }
 
         /// <summary>
-        /// 配置依赖注入容器
+        /// 配置依赖注入 - 纯新架构
         /// </summary>
         private static void ConfigureDependencyInjection()
         {
@@ -111,6 +106,18 @@ namespace MainUI
             ServiceProvider = services.BuildServiceProvider();
         }
 
+        /// <summary>
+        /// 注册窗体
+        /// </summary>
+        private static void RegisterForms(IServiceCollection services)
+        {
+            // 工作流设计器窗体
+            services.AddTransient<WorkflowDesignerForm>();
+
+            // 可以注册其他窗体...
+            // services.AddTransient<LoginForm>();
+            // services.AddTransient<MainForm>();
+        }
 
         private static Mutex applicationMutex;
         /// <summary>
@@ -206,9 +213,6 @@ namespace MainUI
                 // 获取主窗体
                 var mainForm = ServiceProvider.GetRequiredService<frmMainMenu>();
 
-                // 在应用启动时创建系统变量占位符
-                InitializeSystemVariables();
-
                 // 运行主程序
                 Application.Run(mainForm);
             }
@@ -217,25 +221,6 @@ namespace MainUI
                 NlogHelper.Default.Error("主应用程序启动失败：", ex);
                 MessageBox.Show($"主应用程序启动失败：{ex.Message}", "系统提示",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private static void InitializeSystemVariables()
-        {
-            try
-            {
-                var globalVariableManager = ServiceProvider.GetService<GlobalVariableManager>();
-                if (globalVariableManager != null)
-                {
-                    // 创建系统变量占位符
-                    TestInfoVariableHelper.InitializeTestInfoVariables(globalVariableManager);
-
-                    NlogHelper.Default.Info("✓ 系统变量占位符已创建");
-                }
-            }
-            catch (Exception ex)
-            {
-                NlogHelper.Default.Error("初始化系统变量失败", ex);
             }
         }
 

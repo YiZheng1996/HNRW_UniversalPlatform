@@ -1,7 +1,4 @@
-﻿using MainUI.LogicalConfiguration;
-using MainUI.LogicalConfiguration.LogicalManager;
-using MainUI.LogicalConfiguration.Services;
-using MainUI.Model;
+﻿using MainUI.UniversalPlatform.Core.Domain.Workflows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -13,17 +10,17 @@ namespace MainUI.Service
     /// </summary>
     public class WorkflowExecutionService(
         IWorkflowStateService workflowState,
-        Func<List<ChildModel>, StepExecutionManager> executionFactory,
+        Func<List<WorkflowStep>, StepExecutionManager> executionFactory,
         ILogger<WorkflowExecutionService> logger) : IDisposable
     {
         #region 私有字段
 
         private readonly IWorkflowStateService _workflowState = workflowState ?? throw new ArgumentNullException(nameof(workflowState));
-        private readonly Func<List<ChildModel>, StepExecutionManager> _executionFactory = executionFactory ?? throw new ArgumentNullException(nameof(executionFactory));
+        private readonly Func<List<WorkflowStep>, StepExecutionManager> _executionFactory = executionFactory ?? throw new ArgumentNullException(nameof(executionFactory));
         private readonly ILogger<WorkflowExecutionService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         // 存储加载的工作流配置：项目名称 -> 步骤列表
-        private Dictionary<string, List<ChildModel>> _workflowConfigurations = [];
+        private Dictionary<string, List<WorkflowStep>> _workflowConfigurations = [];
 
         // 当前执行的工作流管理器
         private StepExecutionManager _currentExecutionManager;
@@ -60,7 +57,7 @@ namespace MainUI.Service
         /// 步骤状态变化事件
         /// 参数：(步骤, 索引)
         /// </summary>
-        public event Action<ChildModel, int> StepStatusChanged;
+        public event Action<WorkflowStep, int> StepStatusChanged;
 
         /// <summary>
         /// 错误发生事件
@@ -199,7 +196,7 @@ namespace MainUI.Service
         /// <summary>
         /// 加载单个配置文件
         /// </summary>
-        private async Task<List<ChildModel>> LoadSingleConfigurationAsync(
+        private async Task<List<WorkflowStep>> LoadSingleConfigurationAsync(
             string jsonPath,
             string modelType,
             string modelName,
@@ -217,12 +214,12 @@ namespace MainUI.Service
 
                 if (parent?.ChildSteps != null && parent.ChildSteps.Count > 0)
                 {
-                    return [.. parent.ChildSteps.Select(s => new ChildModel
+                    return [.. parent.ChildSteps.Select(s => new WorkflowStep
                     {
                         StepName = s.StepName,
-                        Status = s.Status,
-                        StepNum = s.StepNum,
-                        StepParameter = s.StepParameter,
+                        //Status = s.Status,
+                        StepNumber = s.StepNum,
+                        Parameter = s.StepParameter,
                         Remark = s.Remark
                     })];
                 }
@@ -244,7 +241,7 @@ namespace MainUI.Service
         /// </summary>
         /// <param name="itemName">项目名称</param>
         /// <returns>步骤列表，如果不存在返回 null</returns>
-        public List<ChildModel> GetConfiguration(string itemName)
+        public List<WorkflowStep> GetConfiguration(string itemName)
         {
             if (_workflowConfigurations.TryGetValue(itemName, out var steps))
             {
@@ -330,12 +327,12 @@ namespace MainUI.Service
                 _workflowState.ClearSteps();
                 foreach (var step in steps)
                 {
-                    _workflowState.AddStep(new ChildModel
+                    _workflowState.AddStep(new WorkflowStep
                     {
                         StepName = step.StepName,
                         Status = step.Status,
-                        StepNum = step.StepNum,
-                        StepParameter = step.StepParameter,
+                        StepNumber = step.StepNumber,
+                        Parameter = step.Parameter,
                         Remark = step.Remark
                     });
                 }
@@ -549,7 +546,7 @@ namespace MainUI.Service
         /// <summary>
         /// 步骤状态变化处理
         /// </summary>
-        private void OnStepStatusChanged(ChildModel step, int stepIndex)
+        private void OnStepStatusChanged(WorkflowStep step, int stepIndex)
         {
             try
             {
@@ -559,9 +556,9 @@ namespace MainUI.Service
                 // 生成进度消息
                 string statusText = step.Status switch
                 {
-                    1 => "▶ 执行中",
-                    2 => "✓ 完成",
-                    3 => "✗ 失败",
+                    StepStatus.Running => "▶ 执行中",
+                    StepStatus.Succeeded => "✓ 完成",
+                    StepStatus.Failed => "✗ 失败",
                     _ => "⏳ 待执行"
                 };
 

@@ -42,23 +42,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="CurrencyHelper\Permission\**" />
+    <Compile Remove="LogicalConfiguration\**" />
     <EmbeddedResource Remove="CurrencyHelper\Permission\**" />
+    <EmbeddedResource Remove="LogicalConfiguration\**" />
     <None Remove="CurrencyHelper\Permission\**" />
+    <None Remove="LogicalConfiguration\**" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="LogicalConfiguration\Forms\Form_ExpressionHelper.cs" />
-    <Compile Remove="LogicalConfiguration\Forms\Form_ExpressionHelper.Designer.cs" />
     <Compile Remove="Model\TestStep.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Remove="LogicalConfiguration\Forms\Form_ExpressionHelper.resx" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="LogicalConfiguration\Controls\ToolTreeViewControl.Designer.cs~RF57a68e8.TMP" />
-    <None Remove="LogicalConfiguration\Forms\Form_Detection.cs~RF13224ec.TMP" />
-    <None Remove="LogicalConfiguration\Forms\Form_Loop.resx~RF69146fb.TMP" />
-    <None Remove="LogicalConfiguration\Forms\Form_ReadPLC.Designer.cs~RF5a40a8f.TMP" />
-    <None Remove="LogicalConfiguration\Forms\kja3lzxb.b2v~" />
     <None Remove="Procedure\b0k3pdyj.on3~" />
     <None Remove="UcHMI_FLE.Designer.cs~RF6dc9f21.TMP" />
   </ItemGroup>
@@ -202,5 +195,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Procedure\Test\测试类型\" />
+    <Folder Include="UniversalPlatform\UI\WorkflowDesigner\Forms\Variable\" />
+    <Folder Include="UniversalPlatform\UI\WorkflowDesigner\Forms\Report\" />
   </ItemGroup>
 </Project>

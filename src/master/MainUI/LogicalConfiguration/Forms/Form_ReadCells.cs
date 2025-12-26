@@ -314,9 +314,9 @@ namespace MainUI.LogicalConfiguration.Forms
                 // 先更新 _parameter,再调用基类保存方法
                 _parameter = GetCurrentParameters();
 
-                // 调用基类的 SaveParameters() 方法
+                // 调用基类的 SaveParameterFromForm() 方法
                 // 基类会调用 CollectParameters() 来获取要保存的参数
-                SaveParameters();
+                SaveParameterFromForm();
 
                 // 设置对话框结果并关闭
                 DialogResult = DialogResult.OK;
