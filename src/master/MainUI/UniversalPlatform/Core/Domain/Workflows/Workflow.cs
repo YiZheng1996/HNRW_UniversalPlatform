@@ -316,8 +316,6 @@ namespace MainUI.UniversalPlatform.Core.Domain.Workflows
     }
 
 
-
-
     #region 领域事件
 
     /// <summary>

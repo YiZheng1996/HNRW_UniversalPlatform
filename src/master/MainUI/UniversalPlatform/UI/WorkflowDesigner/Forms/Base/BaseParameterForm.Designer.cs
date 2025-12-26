@@ -1,4 +1,4 @@
-﻿namespace MainUI.UniversalPlatform.UI.WorkflowDesigner.Forms
+namespace MainUI.UniversalPlatform.UI.WorkflowDesigner.Forms
 {
     partial class BaseParameterForm
     {
@@ -26,18 +26,17 @@
         /// Required method for Designer support - do not modify
         /// the contents of this method with the code editor.
         /// </summary>
-        private void InitializeComponent()
+        public void InitializeComponent()
         {
-            SuspendLayout();
-            // 
-            // BaseParameterForm
-            // 
-            AutoScaleMode = AutoScaleMode.None;
-            ClientSize = new Size(800, 450);
-            Name = "BaseParameterForm";
-            Text = "BaseParameterForm";
-            ZoomScaleRect = new Rectangle(15, 15, 800, 450);
-            ResumeLayout(false);
+            this.components = new System.ComponentModel.Container();
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(480, 450);
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
+            this.ShowIcon = false;
+            this.ShowInTaskbar = false;
         }
 
         #endregion

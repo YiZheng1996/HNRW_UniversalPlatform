@@ -195,5 +195,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Procedure\Test\测试类型\" />
+    <Folder Include="UniversalPlatform\UI\WorkflowDesigner\Forms\Variable\" />
+    <Folder Include="UniversalPlatform\UI\WorkflowDesigner\Forms\Report\" />
   </ItemGroup>
 </Project>

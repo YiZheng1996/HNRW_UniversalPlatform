@@ -93,8 +93,7 @@ namespace MainUI.UniversalPlatform.Infrastructure.Persistence
         /// </summary>
         public async Task SaveAsync(Workflow workflow, CancellationToken cancellationToken = default)
         {
-            if (workflow == null)
-                throw new ArgumentNullException(nameof(workflow));
+            ArgumentNullException.ThrowIfNull(workflow);
 
             var filePath = GetFilePath(workflow.ModelType, workflow.ModelName, workflow.ItemName);
 
@@ -260,10 +259,9 @@ namespace MainUI.UniversalPlatform.Infrastructure.Persistence
                     CreateTime = workflow.CreatedAt.ToString("yyyy/MM/dd HH:mm:ss"),
                     ProjectName = "软件通用平台"
                 },
-                Form = new List<FormDataDto>
-                {
-                    new FormDataDto
-                    {
+                Form =
+                [
+                    new() {
                         ModelTypeName = workflow.ModelType,
                         ModelName = workflow.ModelName,
                         ItemName = workflow.ItemName,
@@ -277,8 +275,8 @@ namespace MainUI.UniversalPlatform.Infrastructure.Persistence
                             ErrorMessage = s.ErrorMessage
                         }).ToList()
                     }
-                },
-                Variable = new List<VariableDto>()
+                ],
+                Variable = []
             };
         }
 
@@ -335,19 +333,13 @@ namespace MainUI.UniversalPlatform.Infrastructure.Persistence
     /// <summary>
     /// JSON变量仓储实现
     /// </summary>
-    public class JsonVariableRepository : IVariableRepository
+    public class JsonVariableRepository(
+        ILogger<JsonVariableRepository> logger,
+        string basePath = null) : IVariableRepository
     {
-        private readonly ILogger<JsonVariableRepository> _logger;
-        private readonly string _basePath;
+        private readonly ILogger<JsonVariableRepository> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        private readonly string _basePath = basePath ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Procedure");
         private readonly SemaphoreSlim _lock = new(1, 1);
-
-        public JsonVariableRepository(
-            ILogger<JsonVariableRepository> logger,
-            string basePath = null)
-        {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _basePath = basePath ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Procedure");
-        }
 
         private string GetFilePath(string modelType, string modelName, string itemName)
         {
