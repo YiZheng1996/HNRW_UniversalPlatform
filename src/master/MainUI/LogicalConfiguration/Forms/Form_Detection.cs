@@ -112,11 +112,11 @@ namespace MainUI.LogicalConfiguration.Forms
                 SetupEventHandlers();
 
                 _isInitializing = false;
-                _logger?.LogInformation("检测工具窗体初始化完成");
+                Logger?.LogInformation("检测工具窗体初始化完成");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "初始化表单时发生错误");
+                Logger?.LogError(ex, "初始化表单时发生错误");
                 MessageHelper.MessageOK(this, $"初始化失败：{ex.Message}");
             }
         }
@@ -168,7 +168,7 @@ namespace MainUI.LogicalConfiguration.Forms
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "初始化下拉框失败");
+                Logger?.LogError(ex, "初始化下拉框失败");
             }
         }
 
@@ -190,11 +190,11 @@ namespace MainUI.LogicalConfiguration.Forms
                     CloseOnSubmit = true
                 });
 
-                _logger?.LogDebug("表达式输入面板初始化完成");
+                Logger?.LogDebug("表达式输入面板初始化完成");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "初始化表达式输入面板失败");
+                Logger?.LogError(ex, "初始化表达式输入面板失败");
             }
         }
 
@@ -417,7 +417,7 @@ namespace MainUI.LogicalConfiguration.Forms
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "确定按钮处理时发生错误");
+                Logger?.LogError(ex, "确定按钮处理时发生错误");
                 MessageHelper.MessageOK($"操作失败：{ex.Message}", TType.Error);
             }
             finally
@@ -486,11 +486,11 @@ namespace MainUI.LogicalConfiguration.Forms
                 UpdateValidationStatus();
 
                 _hasUnsavedChanges = false;
-                _logger?.LogDebug("参数加载到界面完成");
+                Logger?.LogDebug("参数加载到界面完成");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "加载参数到界面失败");
+                Logger?.LogError(ex, "加载参数到界面失败");
             }
             finally
             {
@@ -527,11 +527,11 @@ namespace MainUI.LogicalConfiguration.Forms
                 _parameter.ResultHandling.ValueVariableName = cmbValueVariable.Text?.Trim() ?? "";
                 _parameter.ResultHandling.OnFailure = (FailureAction)cmbFailureAction.SelectedIndex;
 
-                _logger?.LogDebug("界面保存到参数完成");
+                Logger?.LogDebug("界面保存到参数完成");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "保存界面到参数失败");
+                Logger?.LogError(ex, "保存界面到参数失败");
             }
         }
 
@@ -606,7 +606,7 @@ namespace MainUI.LogicalConfiguration.Forms
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "验证输入失败");
+                Logger?.LogError(ex, "验证输入失败");
                 MessageHelper.MessageOK(this, $"验证失败：{ex.Message}");
                 return false;
             }
