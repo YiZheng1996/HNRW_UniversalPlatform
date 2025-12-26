@@ -180,10 +180,10 @@ namespace MainUI.LogicalConfiguration.Forms
         {
             try
             {
-                if (_plcManager == null) return;
+                if (PLCManager == null) return;
 
                 // 获取PLC模块及其点位信息
-                var moduleTagsDict = await _plcManager.GetModuleTagsAsync();
+                var moduleTagsDict = await PLCManager.GetModuleTagsAsync();
                 if (moduleTagsDict == null || moduleTagsDict.Count == 0)
                 {
                     Logger?.LogWarning("未找到可用的PLC模块");
@@ -215,7 +215,7 @@ namespace MainUI.LogicalConfiguration.Forms
         {
             try
             {
-                var globalVariableManager = _globalVariable ?? Program.ServiceProvider?.GetService<GlobalVariableManager>();
+                var globalVariableManager = GlobalVariable ?? Program.ServiceProvider?.GetService<GlobalVariableManager>();
                 if (globalVariableManager == null) return;
 
                 var variables = globalVariableManager.GetAllVariables();
@@ -299,7 +299,7 @@ namespace MainUI.LogicalConfiguration.Forms
                 if (_parameter.Items != null && _parameter.Items.Count > 0)
                 {
                     // 获取所有PLC模块的地址信息（用于填充下拉框）
-                    var moduleTagsDict = _plcManager != null ? await _plcManager.GetModuleTagsAsync() : null;
+                    var moduleTagsDict = PLCManager != null ? await PLCManager.GetModuleTagsAsync() : null;
 
                     foreach (var item in _parameter.Items)
                     {
@@ -365,7 +365,7 @@ namespace MainUI.LogicalConfiguration.Forms
         /// <summary>
         /// 保存界面数据到参数对象
         /// </summary>
-        protected override void SaveFormToParameter()
+        protected override void SaveParameterFromForm()
         {
             try
             {
@@ -422,7 +422,7 @@ namespace MainUI.LogicalConfiguration.Forms
             {
                 _parameter = new Parameter_WritePLC
                 {
-                    Description = $"PLC写入步骤 {(_workflowState?.StepNum ?? 0) + 1}",
+                    Description = $"PLC写入步骤 {(WorkflowState?.StepNum ?? 0) + 1}",
                     IsEnabled = true,
                     Items = []
                 };
@@ -489,10 +489,10 @@ namespace MainUI.LogicalConfiguration.Forms
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(moduleName) || _plcManager == null) return;
+                if (string.IsNullOrWhiteSpace(moduleName) || PLCManager == null) return;
                 if (rowIndex < 0 || rowIndex >= DataGridViewPLCList.Rows.Count) return;
 
-                var addresses = await _plcManager.GetModuleTagsAsync();
+                var addresses = await PLCManager.GetModuleTagsAsync();
                 if (addresses == null || addresses.Count == 0)
                 {
                     Logger?.LogWarning("模块 {ModuleName} 没有可用地址", moduleName);
@@ -792,7 +792,7 @@ namespace MainUI.LogicalConfiguration.Forms
         private void BtnSave_Click(object sender, EventArgs e)
         {
             // 基类统一处理
-            SaveParameters();
+            SaveParameterFromForm();
         }
 
         /// <summary>

@@ -1,99 +1,208 @@
-﻿using MainUI.LogicalConfiguration.Services.ServicesPLC;
+using MainUI.LogicalConfiguration.Engine;
+using MainUI.LogicalConfiguration.Forms;
+using MainUI.LogicalConfiguration.LogicalManager;
+using MainUI.LogicalConfiguration.Services.ServicesPLC;
+using MainUI.Procedure.DSL.LogicalConfiguration.Forms;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace MainUI.LogicalConfiguration.Services
 {
     /// <summary>
-    /// 依赖注入服务扩展类
+    /// 依赖注入服务扩展类 - 重构版
     /// 
-    /// 这个类提供了便捷的扩展方法来注册我们的服务
-    /// 使用扩展方法的好处：
+    /// 设计原则：
     /// 1. 集中管理服务注册逻辑
     /// 2. 提供清晰的 API
-    /// 3. 易于维护和修改
+    /// 3. 按功能模块分组注册
+    /// 4. 支持链式调用
     /// </summary>
     public static class DIServiceExtensions
     {
+        #region 核心服务
+
         /// <summary>
-        /// 注册工作流状态服务到依赖注入容器
-        /// 
-        /// 注册策略说明：
-        /// - 使用 AddSingleton：整个应用程序生命周期内只有一个实例
-        /// - 这符合原来 SingletonStatus 的行为
-        /// - 确保状态在整个应用程序中保持一致
+        /// 注册工作流核心服务
+        /// 包含状态管理、配置服务、变量同步等核心功能
         /// </summary>
-        /// <param name="services">服务集合</param>
-        /// <returns>服务集合（支持链式调用）</returns>
-        public static IServiceCollection AddWorkflowServices(this IServiceCollection services)
+        public static IServiceCollection AddWorkflowCore(this IServiceCollection services)
         {
-            // 注册接口和实现的映射
-            // 这样可以通过接口进行依赖注入，提高可测试性
+            // ========================================
+            // 1. 核心状态服务 (单例 - 全局共享)
+            // ========================================
             services.AddSingleton<IWorkflowStateService, WorkflowStateService>();
 
-            // 可以在这里注册其他相关服务
-            // services.AddScoped<IWorkflowManager, WorkflowManager>();
-            // services.AddTransient<IWorkflowValidator, WorkflowValidator>();
+            // ========================================
+            // 2. 配置服务 (作用域 - 每个窗体实例一个)
+            // ========================================
+            services.AddScoped<IWorkflowConfigurationService, WorkflowConfigurationService>();
+
+            // ========================================
+            // 3. 变量同步器 (作用域 - 每个窗体实例一个)
+            // ========================================
+            services.AddScoped<IVariableSynchronizer, VariableSynchronizer>();
+
+            // ========================================
+            // 4. 全局变量管理器 (单例 - 只读访问器)
+            // ========================================
+            services.AddSingleton<GlobalVariableManager>();
+
+            // ========================================
+            // 5. 表达式引擎 (单例)
+            // ========================================
+            services.AddSingleton<ExpressionEngine>();
+            services.AddSingleton<VariableAssignmentEngine>();
+
+            // ========================================
+            // 6. 步骤详情提供器 (单例)
+            // ========================================
+            services.AddSingleton<StepDetailsProvider>();
 
             return services;
         }
 
-        /// <summary>
-        /// 注册工作流服务的重载方法，支持自定义配置
-        /// </summary>
-        /// <param name="services">服务集合</param>
-        /// <param name="configureOptions">配置选项的委托</param>
-        /// <returns>服务集合</returns>
-        public static IServiceCollection AddWorkflowServices(
-            this IServiceCollection services,
-            Action<WorkflowServiceOptions> configureOptions = null,
-            Action<PLCConfigurationOptions> configureConfigOptions = null)
-        {
-            // 配置选项
-            if (configureOptions != null)
-            {
-                services.Configure(configureOptions);
-            }
-            if (configureConfigOptions != null)
-            {
-                services.Configure(configureConfigOptions);
-            }
+        #endregion
 
-            // 注册主要服务及PLC相关服务
-            services.AddSingleton<IWorkflowStateService, WorkflowStateService>();
+        #region PLC 服务
+
+        /// <summary>
+        /// 注册 PLC 相关服务
+        /// </summary>
+        public static IServiceCollection AddPLCServices(this IServiceCollection services)
+        {
+            // PLC 配置服务 (单例)
             services.AddSingleton<IPLCConfigurationService, PLCConfigurationService>();
+
+            // PLC 模块提供器 (单例)
             services.AddSingleton<IPLCModuleProvider, PLCModuleProvider>();
-            //services.AddSingleton<IPLCManager, PLCManager>();
+
+            // PLC 管理器 (作用域 - 支持每个窗体独立管理)
             services.AddScoped<IPLCManager, PLCManager>();
 
+            // 配置选项
+            services.Configure<PLCManagerOptions>(options =>
+            {
+                options.ConnectionTimeout = TimeSpan.FromSeconds(30);
+                options.OperationTimeout = TimeSpan.FromSeconds(10);
+                options.MaxRetryCount = 3;
+            });
+
             return services;
         }
+
+        #endregion
+
+        #region UI 服务
+
+        /// <summary>
+        /// 注册 UI 服务
+        /// 包含窗体服务和所有参数表单
+        /// </summary>
+        public static IServiceCollection AddUIServices(this IServiceCollection services)
+        {
+            // ========================================
+            // 1. 窗体服务 (作用域)
+            // ========================================
+            services.AddScoped<IFormService, FormService>();
+
+            // ========================================
+            // 2. 参数表单 (瞬态 - 每次请求创建新实例)
+            // ========================================
+            // 变量相关
+            services.AddTransient<Form_DefineVar>();
+            services.AddTransient<Form_VariableAssignment>();
+            services.AddTransient<Form_VariableMonitor>();
+
+            // PLC 相关
+            services.AddTransient<Form_ReadPLC>();
+            services.AddTransient<Form_WritePLC>();
+            services.AddTransient<Form_DefinePoint>();
+
+            // 流程控制
+            services.AddTransient<Form_DelayTime>();
+            services.AddTransient<Form_Loop>();
+            services.AddTransient<Form_Detection>();
+            services.AddTransient<Form_Condition>();
+            services.AddTransient<Form_WaitForStable>();
+
+            // 数据操作
+            services.AddTransient<Form_ReadCells>();
+            services.AddTransient<Form_WriteCells>();
+            services.AddTransient<Form_SaveReport>();
+
+            // 系统功能
+            services.AddTransient<Form_SystemPrompt>();
+
+            return services;
+        }
+
+        #endregion
+
+        #region 日志服务
+
+        /// <summary>
+        /// 注册工作流日志服务
+        /// </summary>
+        public static IServiceCollection AddWorkflowLogging(this IServiceCollection services)
+        {
+            services.AddLogging(builder =>
+            {
+                builder.SetMinimumLevel(LogLevel.Debug);
+                
+                // 控制台日志
+                builder.AddConsole();
+                
+                // 调试输出
+                builder.AddDebug();
+
+                // 添加NLog
+                builder.AddNLog(); 
+            });
+
+            return services;
+        }
+
+        #endregion
+
+        #region 便捷方法
+
+        /// <summary>
+        /// 注册所有工作流相关服务
+        /// 一站式注册方法
+        /// </summary>
+        public static IServiceCollection AddAllWorkflowServices(this IServiceCollection services)
+        {
+            return services
+                .AddWorkflowCore()
+                .AddPLCServices()
+                .AddUIServices()
+                .AddWorkflowLogging();
+        }
+
+        #endregion
     }
+
+    #region 配置选项类
 
     /// <summary>
     /// 工作流服务配置选项
-    /// 
-    /// 可以用来配置服务的行为，例如：
-    /// - 是否启用事件日志
-    /// - 性能监控设置
-    /// - 缓存策略等
     /// </summary>
     public class WorkflowServiceOptions
     {
         /// <summary>
         /// 是否启用事件日志记录
-        /// 默认为 false，避免性能影响
         /// </summary>
         public bool EnableEventLogging { get; set; } = false;
 
         /// <summary>
         /// 是否启用性能监控
-        /// 默认为 false，生产环境可以开启
         /// </summary>
         public bool EnablePerformanceMonitoring { get; set; } = false;
 
         /// <summary>
         /// 变量缓存的最大大小
-        /// 用于控制内存使用
         /// </summary>
         public int MaxVariableCacheSize { get; set; } = 1000;
 
@@ -101,5 +210,54 @@ namespace MainUI.LogicalConfiguration.Services
         /// 步骤缓存的最大大小
         /// </summary>
         public int MaxStepCacheSize { get; set; } = 500;
+
+        /// <summary>
+        /// 自动保存间隔（秒），0 表示禁用
+        /// </summary>
+        public int AutoSaveIntervalSeconds { get; set; } = 0;
     }
+
+    /// <summary>
+    /// PLC 配置选项
+    /// </summary>
+    public class PLCConfigurationOptions
+    {
+        /// <summary>
+        /// 配置文件路径
+        /// </summary>
+        public string ConfigurationPath { get; set; }
+
+        /// <summary>
+        /// 是否启用文件监控
+        /// </summary>
+        public bool EnableFileWatcher { get; set; } = true;
+    }
+
+    /// <summary>
+    /// PLC 管理器选项
+    /// </summary>
+    public class PLCManagerOptions
+    {
+        /// <summary>
+        /// 连接超时时间
+        /// </summary>
+        public TimeSpan ConnectionTimeout { get; set; } = TimeSpan.FromSeconds(30);
+
+        /// <summary>
+        /// 操作超时时间
+        /// </summary>
+        public TimeSpan OperationTimeout { get; set; } = TimeSpan.FromSeconds(10);
+
+        /// <summary>
+        /// 最大重试次数
+        /// </summary>
+        public int MaxRetryCount { get; set; } = 3;
+
+        /// <summary>
+        /// 重试间隔
+        /// </summary>
+        public TimeSpan RetryInterval { get; set; } = TimeSpan.FromMilliseconds(500);
+    }
+
+    #endregion
 }

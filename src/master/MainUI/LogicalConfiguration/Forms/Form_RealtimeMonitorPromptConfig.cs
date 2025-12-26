@@ -226,7 +226,7 @@ namespace MainUI.LogicalConfiguration.Forms
             }
 
             SaveFormToParameter();
-            SaveParameters();
+            SaveParameterFromForm();
         }
 
         private bool ValidateConfiguration()

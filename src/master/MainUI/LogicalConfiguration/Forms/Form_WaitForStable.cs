@@ -233,7 +233,7 @@ namespace MainUI.LogicalConfiguration.Forms
         {
             try
             {
-                var plcManager = _plcManager ?? Program.ServiceProvider?.GetService<IPLCManager>();
+                var plcManager = PLCManager ?? Program.ServiceProvider?.GetService<IPLCManager>();
                 if (plcManager == null)
                 {
                     Logger?.LogWarning("无法获取 PLCManager 实例");
@@ -260,7 +260,7 @@ namespace MainUI.LogicalConfiguration.Forms
         {
             try
             {
-                var plcManager = _plcManager ?? Program.ServiceProvider?.GetService<IPLCManager>();
+                var plcManager = PLCManager ?? Program.ServiceProvider?.GetService<IPLCManager>();
                 if (plcManager == null || string.IsNullOrEmpty(moduleName))
                     return;
 
@@ -460,7 +460,7 @@ namespace MainUI.LogicalConfiguration.Forms
             {
                 try
                 {
-                    var plcManager = _plcManager ?? Program.ServiceProvider?.GetService<IPLCManager>();
+                    var plcManager = PLCManager ?? Program.ServiceProvider?.GetService<IPLCManager>();
                     if (plcManager != null)
                     {
                         var modules = await plcManager.GetModuleTagsAsync();
@@ -482,15 +482,8 @@ namespace MainUI.LogicalConfiguration.Forms
         {
             try
             {
-                if (!IsServiceAvailable)
-                {
-                    Logger?.LogWarning("服务不可用，无法加载PLC参数");
-                    SetDefaultValues();
-                    return;
-                }
-
-                var steps = _workflowState.GetSteps();
-                int idx = _workflowState.StepNum;
+                var steps = WorkflowState.GetSteps();
+                int idx = WorkflowState.StepNum;
 
                 if (steps == null || idx < 0 || idx >= steps.Count)
                 {
@@ -681,7 +674,7 @@ namespace MainUI.LogicalConfiguration.Forms
                 SaveFormToParameter();
 
                 // 通知基类保存成功
-                SaveParameters();
+                SaveParameterFromForm();
 
                 DialogResult = DialogResult.OK;
                 Close();
@@ -745,7 +738,7 @@ namespace MainUI.LogicalConfiguration.Forms
                 else
                 {
                     // 从PLC获取值
-                    var plcManager = _plcManager ?? Program.ServiceProvider?.GetService<IPLCManager>();
+                    var plcManager = PLCManager ?? Program.ServiceProvider?.GetService<IPLCManager>();
                     if (plcManager != null)
                     {
                         var plcValue = await Task.Run(() =>
@@ -1012,7 +1005,7 @@ namespace MainUI.LogicalConfiguration.Forms
         {
             Parameter = new Parameter_WaitForStable
             {
-                Description = $"等待变量稳定步骤 {_workflowState?.StepNum + 1}",
+                Description = $"等待变量稳定步骤 {WorkflowState?.StepNum + 1}",
                 MonitorSourceType = MonitorSourceType.Variable,
                 MonitorVariable = "",
                 PlcModuleName = "",

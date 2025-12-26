@@ -150,7 +150,7 @@ namespace MainUI.Procedure.DSL.LogicalConfiguration.Forms
         private void OnSaveClick(object sender, EventArgs e)
         {
             if (DesignMode) return;
-            SaveParameters();
+            SaveParameterFromForm();
         }
 
         private void txtTime_KeyPress(object sender, KeyPressEventArgs e)

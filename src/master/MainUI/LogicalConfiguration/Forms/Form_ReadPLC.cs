@@ -595,7 +595,7 @@ namespace MainUI.LogicalConfiguration.Forms
                     return;
                 }
 
-                SaveParameters();
+                SaveParameterFromForm();
                 DialogResult = DialogResult.OK;
                 Close();
             }

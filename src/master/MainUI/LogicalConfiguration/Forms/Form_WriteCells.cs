@@ -351,7 +351,7 @@ namespace MainUI.LogicalConfiguration.Forms
 
         private void BtnSave_Click(object sender, EventArgs e)
         {
-            SaveParameters();
+            SaveParameterFromForm();
         }
 
         private void BtnCancel_Click(object sender, EventArgs e)
