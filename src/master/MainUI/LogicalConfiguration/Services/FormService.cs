@@ -19,6 +19,7 @@ namespace MainUI.LogicalConfiguration.Services
         private readonly IPLCManager _plcManager;
         private readonly IWorkflowStateService _workflowState;
         private readonly GlobalVariableManager _variableManager;
+        private readonly IVariableSynchronizer _variableSynchronizer;
         private readonly IPLCConfigurationService _plcConfigService;
         private readonly IFormService _selfReference; // 用于避免循环引用
 
@@ -35,6 +36,7 @@ namespace MainUI.LogicalConfiguration.Services
                 _workflowState = _serviceProvider.GetRequiredService<IWorkflowStateService>();
                 _plcConfigService = _serviceProvider.GetRequiredService<IPLCConfigurationService>();
                 _variableManager = _serviceProvider.GetRequiredService<GlobalVariableManager>();
+                _variableSynchronizer = _serviceProvider.GetRequiredService<IVariableSynchronizer>(); 
                 _selfReference = this; // 自引用，避免循环依赖
             }
             catch (Exception ex)
@@ -88,9 +90,6 @@ namespace MainUI.LogicalConfiguration.Services
                         break;
                     case "条件判断":
                         form = CreateForm<Form_Detection>();
-                        break;
-                    case "变量监控":
-                        form = CreateForm<Form_VariableMonitor>();
                         break;
                     case "点位定义":
                         form = CreateForm<Form_DefinePoint>();
@@ -209,12 +208,6 @@ namespace MainUI.LogicalConfiguration.Services
                 // 检测工具窗体
                 nameof(Form_Detection) => (T)(object)new Form_Detection(),
 
-                // 变量监控
-                nameof(Form_VariableMonitor) => (T)(object)new Form_VariableMonitor(
-                    _workflowState,
-                    _variableManager,
-                    GetSpecificLogger<Form_VariableMonitor>()),
-
                 // 点位定义
                 nameof(Form_DefinePoint) => (T)(object)new Form_DefinePoint(
                     _plcConfigService,
@@ -259,7 +252,7 @@ namespace MainUI.LogicalConfiguration.Services
                 // 使用预加载的服务
                 var form = new FrmLogicalConfiguration(
                     _workflowState,
-                    _variableManager,
+                    _variableSynchronizer,
                     GetSpecificLogger<FrmLogicalConfiguration>(),
                     _selfReference,
                     path, modelType, modelName, processName);
@@ -328,9 +321,6 @@ namespace MainUI.LogicalConfiguration.Services
                         break;
                     case "条件判断":
                         form = CreateForm<Form_Detection>();
-                        break;
-                    case "变量监控":
-                        form = CreateForm<Form_VariableMonitor>();
                         break;
                     case "点位定义":
                         form = CreateForm<Form_DefinePoint>();

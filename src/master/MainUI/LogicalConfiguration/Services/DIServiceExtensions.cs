@@ -113,7 +113,6 @@ namespace MainUI.LogicalConfiguration.Services
             // 变量相关
             services.AddTransient<Form_DefineVar>();
             services.AddTransient<Form_VariableAssignment>();
-            services.AddTransient<Form_VariableMonitor>();
 
             // PLC 相关
             services.AddTransient<Form_ReadPLC>();

@@ -131,7 +131,7 @@ namespace MainUI.LogicalConfiguration.Forms
         {
             try
             {
-                var globalVariableManager = _globalVariable ?? Program.ServiceProvider?.GetService<GlobalVariableManager>();
+                var globalVariableManager = GlobalVariable ?? Program.ServiceProvider?.GetService<GlobalVariableManager>();
                 if (globalVariableManager == null) return;
 
                 var variables = globalVariableManager.GetAllVariables();
@@ -254,7 +254,7 @@ namespace MainUI.LogicalConfiguration.Forms
         {
             try
             {
-                var globalVariableManager = _globalVariable ?? Program.ServiceProvider?.GetService<GlobalVariableManager>();
+                var globalVariableManager = GlobalVariable ?? Program.ServiceProvider?.GetService<GlobalVariableManager>();
                 if (globalVariableManager == null)
                 {
                     MessageHelper.MessageOK("全局变量管理器不可用", TType.Warn);
@@ -559,7 +559,7 @@ namespace MainUI.LogicalConfiguration.Forms
                 RangeMax = "",
                 TrueSteps = [],
                 FalseSteps = [],
-                Description = $"条件判断步骤 {_workflowState?.StepNum + 1}"
+                Description = $"条件判断步骤 {WorkflowState?.StepNum + 1}"
             };
 
             Logger?.LogDebug("设置条件判断参数默认值");

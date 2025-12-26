@@ -176,7 +176,7 @@ namespace MainUI.LogicalConfiguration.Forms
                 TargetVarName = "",
                 Expression = "",
                 Condition = "",
-                Description = $"变量赋值步骤 {_workflowState?.StepNum + 1}",
+                Description = $"变量赋值步骤 {WorkflowState?.StepNum + 1}",
                 IsAssignment = true,
                 AssignmentType = VariableAssignmentType.ExpressionCalculation,
                 DataSource = new DataSourceConfig()

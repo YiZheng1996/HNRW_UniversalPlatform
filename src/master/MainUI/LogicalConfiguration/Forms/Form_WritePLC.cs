@@ -365,7 +365,7 @@ namespace MainUI.LogicalConfiguration.Forms
         /// <summary>
         /// 保存界面数据到参数对象
         /// </summary>
-        protected override void SaveParameterFromForm()
+        protected override void SaveParameters()
         {
             try
             {

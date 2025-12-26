@@ -497,7 +497,7 @@ namespace MainUI.LogicalConfiguration.Forms
                 EnableEarlyExit = false,
                 ExitConditionExpression = "",
                 ChildSteps = [],
-                Description = $"循环步骤 {_workflowState?.StepNum + 1}"
+                Description = $"循环步骤 {WorkflowState?.StepNum + 1}"
             };
 
             Logger?.LogDebug("设置循环参数默认值");

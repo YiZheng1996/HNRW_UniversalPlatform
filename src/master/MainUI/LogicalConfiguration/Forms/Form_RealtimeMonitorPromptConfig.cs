@@ -107,9 +107,9 @@ namespace MainUI.LogicalConfiguration.Forms
         {
             try
             {
-                if (_plcManager != null)
+                if (PLCManager != null)
                 {
-                    var modules = await _plcManager.GetModuleTagsAsync();
+                    var modules = await PLCManager.GetModuleTagsAsync();
                     if (modules != null)
                     {
                         cmbPlcModule.Items.Clear();
@@ -132,7 +132,7 @@ namespace MainUI.LogicalConfiguration.Forms
                 string moduleName = cmbPlcModule.Text;
                 if (string.IsNullOrEmpty(moduleName)) return;
 
-                var addresses = await _plcManager.GetModuleTagsAsync(moduleName);
+                var addresses = await PLCManager.GetModuleTagsAsync(moduleName);
                 if (addresses != null)
                 {
                     cmbPlcAddress.Items.Clear();
@@ -164,8 +164,8 @@ namespace MainUI.LogicalConfiguration.Forms
             {
                 if (!IsServiceAvailable) return;
 
-                var steps = _workflowState.GetSteps();
-                int idx = _workflowState.StepNum;
+                var steps = WorkflowState.GetSteps();
+                int idx = WorkflowState.StepNum;
 
                 if (steps == null || idx < 0 || idx >= steps.Count) return;
 
@@ -207,7 +207,7 @@ namespace MainUI.LogicalConfiguration.Forms
                 using var dialog = new Form_RealtimeMonitorPrompt(
                     Parameter,
                     variableManager,
-                    _plcManager);
+                    PLCManager);
 
                 dialog.ShowDialog(this);
             }

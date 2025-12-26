@@ -94,41 +94,6 @@ namespace MainUI
 
             var services = new ServiceCollection();
 
-            // ========================================
-            // 1. 日志服务
-            // ========================================
-            services.AddWorkflowLogging();
-
-            // ========================================
-            // 2. 核心服务（新架构）
-            // ========================================
-            services.AddWorkflowCore();
-            // 包含：
-            // - IWorkflowRepository (JsonWorkflowRepository)
-            // - IVariableRepository (JsonVariableRepository)
-            // - IExpressionEvaluator (ExpressionEvaluator)
-            // - IStepExecutorFactory (StepExecutorFactory)
-            // - IChildStepExecutor (ChildStepExecutor)
-            // - IWorkflowAppService (WorkflowAppService)
-            // - IStepConfigService (StepConfigService)
-            // - IVariableService (VariableService)
-            // - 所有 IStepExecutor 实现
-
-            // ========================================
-            // 3. UI服务
-            // ========================================
-            services.AddUIServices();
-            // 包含：
-            // - IMessageService (WinFormsMessageService)
-            // - IReportService (ExcelReportService)
-            // - IPLCAdapter (PLCAdapter)
-            // - IFormService (FormService)
-
-            // ========================================
-            // 4. 窗体注册
-            // ========================================
-            RegisterForms(services);
-
             // 使用新的一站式注册方法
             services.AddAllWorkflowServices();
 
