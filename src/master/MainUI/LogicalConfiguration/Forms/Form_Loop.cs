@@ -237,7 +237,6 @@ namespace MainUI.LogicalConfiguration.Forms
         /// </summary>
         private void LoadParameterFromWorkflowState()
         {
-            if (!IsServiceAvailable) return;
 
             try
             {
@@ -310,7 +309,7 @@ namespace MainUI.LogicalConfiguration.Forms
                 }
 
                 SaveFormToParameter();
-                SaveParameters();
+                SaveParameterFromForm();
 
                 _hasUnsavedChanges = false;
                 Logger?.LogInformation("循环配置保存成功");

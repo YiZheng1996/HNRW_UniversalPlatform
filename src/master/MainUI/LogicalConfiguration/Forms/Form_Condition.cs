@@ -351,7 +351,7 @@ namespace MainUI.LogicalConfiguration.Forms
             try
             {
                 // 统一保存方法
-                SaveParameters();
+                SaveParameterFromForm();
             }
             catch (Exception ex)
             {

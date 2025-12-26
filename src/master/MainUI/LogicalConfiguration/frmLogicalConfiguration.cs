@@ -22,6 +22,7 @@ namespace MainUI.LogicalConfiguration
         private readonly GlobalVariableManager _variableManager;
         private readonly ILogger<FrmLogicalConfiguration> _logger;
         private readonly IFormService _formService;
+        private readonly IVariableSynchronizer _variableSynchronizer;
 
         // UI管理器
         private StepExecutionManager _executionManager;
@@ -35,7 +36,7 @@ namespace MainUI.LogicalConfiguration
         #region 构造函数
         public FrmLogicalConfiguration(
             IWorkflowStateService workflowState,
-            GlobalVariableManager variableManager,
+            IVariableSynchronizer variableSynchronizer,
             ILogger<FrmLogicalConfiguration> logger,
             IFormService formService,
             string path,
@@ -45,10 +46,9 @@ namespace MainUI.LogicalConfiguration
         {
             // 依赖验证
             _workflowState = workflowState ?? throw new ArgumentNullException(nameof(workflowState));
-            _variableManager = variableManager ?? throw new ArgumentNullException(nameof(variableManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _formService = formService ?? throw new ArgumentNullException(nameof(formService));
-
+            _variableSynchronizer = variableSynchronizer ?? throw new ArgumentNullException(nameof(variableSynchronizer));
             try
             {
                 InitializeComponent();
@@ -256,7 +256,7 @@ namespace MainUI.LogicalConfiguration
                 _workflowState.ClearUserVariables();
                 foreach (var variable in enhancedVarItems)
                 {
-                    _workflowState.AddVariable(variable);
+                    await _variableSynchronizer.AddOrUpdateVariableAsync((VarItem_Enhanced)variable, persistImmediately: true);
                 }
             }
             catch (Exception ex)

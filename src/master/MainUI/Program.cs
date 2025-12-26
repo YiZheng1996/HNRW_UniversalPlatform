@@ -88,6 +88,10 @@ namespace MainUI
         /// </summary>
         private static void ConfigureDependencyInjection()
         {
+            //var services = new ServiceCollection();
+            //ConfigureServices(services);
+            //ServiceProvider = services.BuildServiceProvider();
+
             var services = new ServiceCollection();
 
             // ========================================
@@ -125,7 +129,15 @@ namespace MainUI
             // ========================================
             RegisterForms(services);
 
-            // 构建服务提供者
+            // 使用新的一站式注册方法
+            services.AddAllWorkflowServices();
+
+            // 或者分别注册
+            // services.AddWorkflowCore();
+            // services.AddPLCServices();
+            // services.AddUIServices();
+            // services.AddWorkflowLogging();
+
             ServiceProvider = services.BuildServiceProvider();
         }
 
@@ -251,20 +263,66 @@ namespace MainUI
 
         #region 服务配置
 
-        /// <summary>
-        /// 配置所有服务的依赖注入
-        /// </summary>
-        private static void ConfigureServices(IServiceCollection services)
-        {
-            // 新的统一注册方式
-            services.AddWorkflowCore();      // 核心服务（仓储、执行器、应用服务）
-            services.AddUIServices();         // UI服务（消息、窗体）
-            services.AddWorkflowLogging();   // 日志服务
+        ///// <summary>
+        ///// 配置所有服务的依赖注入
+        ///// </summary>
+        //private static void ConfigureServices(IServiceCollection services)
+        //{
+        //    // 工作流服务
+        //    services.AddWorkflowServices(
+        //     configureOptions: options =>
+        //     {
+        //         options.EnableEventLogging = true;
+        //         options.EnablePerformanceMonitoring = false;
+        //         options.MaxVariableCacheSize = 1000;
+        //         options.MaxStepCacheSize = 500;
+        //     },
+        //     configureConfigOptions: options =>
+        //     {
+        //         options.ConfigurationPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+        //              "Modules\\MyModules.ini");
+        //         options.EnableFileWatching = true;
+        //         options.CacheTimeoutMinutes = 30;
+        //     });
 
-            //// 保留旧服务（兼容期）
-            //services.AddLegacyServices();    // 旧服务的兼容注册
+        //    // 全局变量管理器
+        //    services.AddSingleton<GlobalVariableManager>();
 
-        }
+        //    // 工具模块方法类注册
+        //    services.AddSingleton<SystemMethods>();
+        //    services.AddSingleton<VariableMethods>();
+        //    services.AddSingleton<PLCMethods>();
+        //    services.AddSingleton<DetectionMethods>();
+        //    services.AddSingleton<ReportMethods>();
+        //    services.AddSingleton<WaitForStableMethods>();
+        //    services.AddScoped<RealtimeMonitorPromptMethods>();
+        //    services.AddTransient<ConditionMethods>();
+        //    services.AddTransient<LoopMethods>();
+
+        //    services.AddSingleton<ExpressionEngine>();
+        //    services.AddSingleton<VariableAssignmentEngine>();
+
+        //    services.AddTransient<frmMainMenu>();// 主窗体
+        //    services.AddSingleton<IFormService, FormService>();// 窗体集合管理类
+        //    services.AddTransient<DataGridViewManager>(); // UI管理器
+        //    services.AddSingleton<WorkflowExecutionService>(); // 工作流执行服务
+
+        //    // 日志服务
+        //    services.AddLogging(builder =>
+        //    {
+        //        builder.AddConsole();
+        //        builder.AddDebug();
+
+        //        builder.ClearProviders(); // 清除默认提供者
+        //        builder.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
+        //        builder.AddNLog(); // 添加NLog
+        //    });
+
+        //    // 步骤执行管理器工厂
+        //    services.AddTransient<Func<List<ChildModel>, StepExecutionManager>>(provider =>
+        //        steps => ActivatorUtilities.CreateInstance<StepExecutionManager>(provider, steps));
+
+        //}
         #endregion
     }
 }

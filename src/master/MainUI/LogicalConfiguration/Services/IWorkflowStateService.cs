@@ -1,4 +1,4 @@
-﻿using static MainUI.LogicalConfiguration.LogicalManager.GlobalVariableManager;
+﻿using MainUI.LogicalConfiguration.LogicalManager;
 
 namespace MainUI.LogicalConfiguration.Services
 {

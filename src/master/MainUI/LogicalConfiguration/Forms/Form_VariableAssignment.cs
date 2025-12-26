@@ -325,7 +325,7 @@ namespace MainUI.LogicalConfiguration.Forms
 
                 SaveFormToParameter();
 
-                SaveParameters();
+                SaveParameterFromForm();
                 _hasUnsavedChanges = false;
                 DialogResult = DialogResult.OK;
                 Close();

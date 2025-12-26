@@ -2,6 +2,7 @@
 using MainUI.LogicalConfiguration.Parameter;
 using MainUI.LogicalConfiguration.LogicalManager;
 using Microsoft.Extensions.Logging;
+using NLog;
 namespace MainUI.LogicalConfiguration.Forms
 {
     public partial class Form_DefineVar : BaseParameterForm
@@ -51,7 +52,7 @@ namespace MainUI.LogicalConfiguration.Forms
         {
             try
             {
-                _logger.LogDebug("开始加载变量列表");
+                Logger.LogDebug("开始加载变量列表");
 
                 DataGridViewDefineVar.Rows.Clear();
 
@@ -63,11 +64,11 @@ namespace MainUI.LogicalConfiguration.Forms
                     DataGridViewDefineVar.Rows.Add(variable.VarName, variable.VarType, variable.VarText);
                 }
 
-                _logger.LogDebug("变量列表加载完成，共 {Count} 个变量", variables.Count);
+                Logger.LogDebug("变量列表加载完成，共 {Count} 个变量", variables.Count);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "加载变量列表时发生错误");
+                Logger.LogError(ex, "加载变量列表时发生错误");
                 MessageHelper.MessageOK("加载变量失败：" + ex.Message, TType.Error);
             }
         }
@@ -90,26 +91,27 @@ namespace MainUI.LogicalConfiguration.Forms
                 {
                     string varName = DataGridViewDefineVar.Rows[rowIndex].Cells[0].Value?.ToString();
 
-                    _logger.LogDebug("尝试删除变量: {VarName}", varName);
+                    Logger.LogDebug("尝试删除变量: {VarName}", varName);
 
                     // 使用新的变量管理器方法
                     bool removed = _variableManager.RemoveVariable(varName);
+                    bool removed = _variableManager.remo(varName);
 
                     if (removed)
                     {
                         LoadVariables(); // 重新加载列表
                         MessageHelper.MessageOK("删除成功！", TType.Success);
-                        _logger.LogInformation("变量删除成功: {VarName}", varName);
+                        Logger.LogInformation("变量删除成功: {VarName}", varName);
                     }
                     else
                     {
                         MessageHelper.MessageOK("删除失败：变量不存在", TType.Warn);
-                        _logger.LogWarning("尝试删除不存在的变量: {VarName}", varName);
+                        Logger.LogWarning("尝试删除不存在的变量: {VarName}", varName);
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "删除变量时发生错误");
+                    Logger.LogError(ex, "删除变量时发生错误");
                     MessageHelper.MessageOK($"删除失败：{ex.Message}", TType.Error);
                 }
             }
@@ -122,7 +124,7 @@ namespace MainUI.LogicalConfiguration.Forms
         {
             try
             {
-                _logger.LogInformation("开始保存变量定义");
+                Logger.LogInformation("开始保存变量定义");
 
                 // 先清空所有变量
                 _workflowState.ClearUserVariables();
@@ -169,12 +171,12 @@ namespace MainUI.LogicalConfiguration.Forms
                         _workflowState.AddVariable(newVariable);
                         addedVariables.Add(varName);
 
-                        _logger.LogDebug("添加变量: {VarName}, 类型: {VarType}", varName, varType);
+                        Logger.LogDebug("添加变量: {VarName}, 类型: {VarType}", varName, varType);
                     }
                     catch (Exception ex)
                     {
                         errorMessages.Add($"添加变量\"{varName}\"失败: {ex.Message}");
-                        _logger.LogError(ex, "添加变量时发生错误: {VarName}", varName);
+                        Logger.LogError(ex, "添加变量时发生错误: {VarName}", varName);
                     }
                 }
 
@@ -187,14 +189,14 @@ namespace MainUI.LogicalConfiguration.Forms
                         {
                             // 使用新的线程安全方法获取所有变量
                             config.Variable.Clear();
-                            var allVariables = _globalVariable.GetAllUserVariables();
+                            var allVariables = GlobalVariable.GetAllUserVariables();
                             config.Variable.AddRange(allVariables.Cast<VarItem>());
 
-                            _logger.LogDebug("变量配置已保存到JSON文件");
+                            Logger.LogDebug("变量配置已保存到JSON文件");
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, "保存变量配置到JSON时发生错误");
+                            Logger.LogError(ex, "保存变量配置到JSON时发生错误");
                             throw;
                         }
 
@@ -209,17 +211,17 @@ namespace MainUI.LogicalConfiguration.Forms
                 {
                     var errorMsg = $"保存错误，以下错误:\n{string.Join("\n", errorMessages)}";
                     MessageHelper.MessageOK(errorMsg, TType.Warn);
-                    _logger.LogWarning("变量保存完成但有错误: {Errors}", string.Join("; ", errorMessages));
+                    Logger.LogWarning("变量保存完成但有错误: {Errors}", string.Join("; ", errorMessages));
                 }
                 else
                 {
                     MessageHelper.MessageOK($"保存成功！共添加 {addedVariables.Count} 个变量", TType.Success);
-                    _logger.LogInformation("变量保存成功，共添加 {Count} 个变量", addedVariables.Count);
+                    Logger.LogInformation("变量保存成功，共添加 {Count} 个变量", addedVariables.Count);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "保存变量时发生错误");
+                Logger.LogError(ex, "保存变量时发生错误");
                 MessageHelper.MessageOK($"保存失败：{ex.Message}", TType.Error);
             }
         }
@@ -289,8 +291,18 @@ namespace MainUI.LogicalConfiguration.Forms
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "显示帮助信息时发生错误");
+                Logger?.LogError(ex, "显示帮助信息时发生错误");
             }
+        }
+
+        protected override void LoadParameterToForm()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void SaveParameterFromForm()
+        {
+            throw new NotImplementedException();
         }
     }
 
